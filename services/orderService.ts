@@ -35,29 +35,6 @@ export const submitOrder = async (orderData: OrderData): Promise<OrderResult> =>
     // Normalize phone number before submission
     const normalizedPhone = normalizePhoneNumber(orderData.customer_phone);
     
-    // Rate limiting: Check for recent orders from this phone number
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-    const { data: recentOrders, error: rateLimitError } = await supabase
-      .from('orders')
-      .select('id')
-      .eq('customer_phone', normalizedPhone)
-      .gte('created_at', oneHourAgo);
-    
-    if (rateLimitError) {
-      console.error('Rate limit check error:', rateLimitError);
-      return {
-        success: false,
-        error: 'Erreur lors de la vérification du taux de commande'
-      };
-    }
-    
-    if (recentOrders && recentOrders.length >= 5) {
-      return {
-        success: false,
-        error: 'Trop de commandes récentes. Veuillez réessayer dans une heure.'
-      };
-    }
-    
     // Start a transaction by creating the order first
     const { data: order, error: orderError } = await supabase
       .from('orders')
@@ -124,7 +101,7 @@ export const submitOrder = async (orderData: OrderData): Promise<OrderResult> =>
           message: {
             to: normalizedPhone,
             type: 'session',
-            message: `🍽️ *Nouvelle commande reçue!*\n\n📋 *Commande:* #${order.id.slice(-8)}\n👤 *Client:* ${orderData.customer_name}\n💰 *Total:* ${orderData.total_amount} DA\n⏰ *Heure:* ${new Date().toLocaleString('fr-FR')}\n\nMerci pour votre commande! 🙏`
+            message: `🍽️ *Commande #${order.id.slice(-8)}*\n\n${orderData.items.map(item => `${item.quantity}x ${item.item_name_fr}`).join('\n')}\n\n💰 *Total: ${orderData.total_amount} MRU*\n⏰ ${new Date().toLocaleString('fr-FR')}\n\nMerci pour votre commande! 🙏`
           },
           orderId: order.id
         })
