@@ -1,0 +1,118 @@
+{
+  "name": "Mustafa Resto - WhatsApp Order Notifications",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "order-confirmation",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-1",
+      "name": "Webhook - Order Confirmation",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "order-confirmation"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get order data from webhook\nconst orderData = $input.all()[0].json;\nconst timestamp = new Date(orderData.timestamp);\nconst dayNumber = timestamp.getDate();\nconst monthNumber = timestamp.getMonth() + 1;\nconst yearNumber = timestamp.getFullYear();\n\n// Format individual items\nconst orderItems = orderData.items.map((item, index) => {\n  return `${index + 1}. ${item.name} (${item.nameAr})\\n   • ${item.quantity}x ${item.price} MRU = ${item.total} MRU`;\n}).join('\\n\\n');\n\n// Create WhatsApp message\nconst message = `🍽️ *NOUVELLE COMMANDE - Mustafa Resto* 🍽️\n\n📅 *Jour ${dayNumber}/${monthNumber}/${yearNumber}*\n⏰ *Heure: ${timestamp.toLocaleTimeString('fr-FR')}*\n\n📋 *Détails de la commande:*\n${orderItems}\n\n💰 *Total: ${orderData.totalAmount} MRU*\n💳 *Devise: ${orderData.currency}*\n\n📞 *Préparez la commande!*\n🏪 *Restaurant: ${orderData.restaurant}*`;\n\nreturn [{\n  json: {\n    phoneNumber: '222XXXXXXX', // REPLACE with your WhatsApp number (with country code, no +)\n    message: message,\n    orderDate: `${dayNumber}/${monthNumber}/${yearNumber}`,\n    orderTime: timestamp.toLocaleTimeString('fr-FR'),\n    totalAmount: orderData.totalAmount\n  }\n}];"
+      },
+      "id": "code-1",
+      "name": "Format WhatsApp Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "accessToken",
+        "resource": "message",
+        "operation": "create",
+        "from": "whatsapp:+14155238886",
+        "to": "whatsapp:+{{ $json.phoneNumber }}",
+        "body": "{{ $json.message }}",
+        "options": {}
+      },
+      "id": "twilio-1",
+      "name": "Send WhatsApp Message",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ],
+      "credentials": {
+        "twilioApi": {
+          "id": "twilio-credentials",
+          "name": "Twilio API Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\"status\": \"success\", \"message\": \"Order received and WhatsApp notification sent\"} }}"
+      },
+      "id": "response-1",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        900,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook - Order Confirmation": {
+      "main": [
+        [
+          {
+            "node": "Format WhatsApp Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format WhatsApp Message": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send WhatsApp Message": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2025-11-26T22:00:00.000Z",
+  "versionId": "1"
+}

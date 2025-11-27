@@ -1,0 +1,154 @@
+{
+  "name": "Mustafa Resto - Fixed CORS WhatsApp",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "order-confirmation",
+        "responseMode": "onReceived",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "id": "webhook-1",
+      "name": "Webhook - Order Confirmation",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "Access-Control-Allow-Origin",
+              "value": "https://fanciful-mooncake-b7d001.netlify.app"
+            },
+            {
+              "name": "Access-Control-Allow-Methods",
+              "value": "POST, OPTIONS"
+            },
+            {
+              "name": "Access-Control-Allow-Headers",
+              "value": "Content-Type, Authorization"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-1",
+      "name": "Add CORS Headers",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\"status\": \"success\", \"message\": \"Order received\", \"headers\": {\"Access-Control-Allow-Origin\": \"https://fanciful-mooncake-b7d001.netlify.app\"}} }}",
+        "options": {}
+      },
+      "id": "response-1",
+      "name": "CORS Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process order in background after response\nconst orderData = JSON.parse($input.all()[0].json.body);\nconst timestamp = new Date(orderData.timestamp);\nconst dayNumber = timestamp.getDate();\nconst monthNumber = timestamp.getMonth() + 1;\nconst yearNumber = timestamp.getFullYear();\n\nconst orderItems = orderData.items.map((item, index) => {\n  return `${index + 1}. ${item.name} (${item.nameAr})\\n   • ${item.quantity}x ${item.price} MRU = ${item.total} MRU`;\n}).join('\\n\\n');\n\nconst message = `🍽️ *NOUVELLE COMMANDE - Mustafa Resto* 🍽️\n\n📅 *Jour ${dayNumber}/${monthNumber}/${yearNumber}*\n⏰ *Heure: ${timestamp.toLocaleTimeString('fr-FR')}*\n\n📋 *Détails de la commande:*\n${orderItems}\n\n💰 *Total: ${orderData.totalAmount} MRU*\n💳 *Devise: ${orderData.currency}*\n\n📞 *Préparez la commande!*\\n🏪 *Restaurant: ${orderData.restaurant}*`;\n\nreturn [{\n  json: {\n    to: 'whatsapp:+222XXXXXXX',\n    from: 'whatsapp:+14155238886',\n    body: message\n  }\n}];"
+      },
+      "id": "code-1",
+      "name": "Process Order & Format Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 500]
+    },
+    {
+      "parameters": {
+        "url": "https://api.twilio.com/2010-04-01/Accounts/YOUR_ACCOUNT_SID/Messages.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/x-www-form-urlencoded"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "To",
+              "value": "={{ $json.to }}"
+            },
+            {
+              "name": "From",
+              "value": "={{ $json.from }}"
+            },
+            {
+              "name": "Body",
+              "value": "={{ $json.body }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "http-1",
+      "name": "Send WhatsApp (Background)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 500]
+    }
+  ],
+  "connections": {
+    "Webhook - Order Confirmation": {
+      "main": [
+        [
+          {
+            "node": "Add CORS Headers",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Process Order & Format Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add CORS Headers": {
+      "main": [
+        [
+          {
+            "node": "CORS Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Order & Format Message": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp (Background)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2025-11-26T22:00:00.000Z",
+  "versionId": "1"
+}

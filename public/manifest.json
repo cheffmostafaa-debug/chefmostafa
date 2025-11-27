@@ -1,0 +1,22 @@
+{
+    "name": "Mustafa Resto",
+    "short_name": "Mustafa",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#ea580c",
+    "orientation": "portrait",
+    "scope": "/",
+    "icons": [
+        {
+            "src": "/images/icon-192.png",
+            "type": "image/png",
+            "sizes": "192x192"
+        },
+        {
+            "src": "/images/icon-512.png",
+            "type": "image/png",
+            "sizes": "512x512"
+        }
+    ]
+}

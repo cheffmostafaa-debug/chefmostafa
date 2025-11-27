@@ -1,0 +1,128 @@
+{
+  "name": "Mustafa Resto - Final Fixed WhatsApp Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "order-confirmation",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-1",
+      "name": "Webhook - Order Confirmation",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get order data and format WhatsApp message\nconst orderData = $input.all()[0].json;\nconst timestamp = new Date(orderData.timestamp);\n\n// Format order items\nconst itemsList = orderData.items.map((item, index) => {\n  return `${index + 1}. ${item.name} (${item.nameAr})\\n   ${item.quantity}x ${item.price} MRU = ${item.total} MRU`;\n}).join('\\n\\n');\n\n// Create final WhatsApp message\nconst whatsappMessage = `🍽️ *NOUVELLE COMMANDE* - Mustafa Resto\\n\\n📅 ${timestamp.toLocaleDateString('fr-FR')}\\n⏰ ${timestamp.toLocaleTimeString('fr-FR')}\\n\\n📋 *Commande:*\\n${itemsList}\\n\\n💰 *Total: ${orderData.totalAmount} MRU*\\n\\n📞 Préparez la commande!`;\n\nreturn [{\n  json: {\n    to: \"whatsapp:+222XXXXXXX\", // REPLACE with your number\n    from: \"whatsapp:+14155238886\", // REPLACE with your Twilio number\n    body: whatsappMessage\n  }\n}];"
+      },
+      "id": "code-1",
+      "name": "Format WhatsApp Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.twilio.com/2010-04-01/Accounts/YOUR_ACCOUNT_SID/Messages.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/x-www-form-urlencoded"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "To",
+              "value": "={{ $json.to }}"
+            },
+            {
+              "name": "From",
+              "value": "={{ $json.from }}"
+            },
+            {
+              "name": "Body",
+              "value": "={{ $json.body }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "http-1",
+      "name": "Send WhatsApp via HTTP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "twilio-basic-auth",
+          "name": "Twilio Basic Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\"status\": \"success\", \"message\": \"Order received - WhatsApp sending...\"} }}"
+      },
+      "id": "response-1",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - Order Confirmation": {
+      "main": [
+        [
+          {
+            "node": "Format WhatsApp Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format WhatsApp Message": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp via HTTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send WhatsApp via HTTP": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2025-11-26T22:00:00.000Z",
+  "versionId": "1"
+}

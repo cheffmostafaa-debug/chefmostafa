@@ -1,0 +1,15 @@
+[[redirects]]
+  from = "/api/order-confirmation"
+  to = "https://bored-oub.app.n8n.cloud/webhook/order-confirmation"
+  status = 200
+  force = true
+  headers = {X-Forwarded-For = "{ip}", X-Real-IP = "{ip}"}
+
+# Handle CORS preflight requests
+[[redirects]]
+  from = "/api/order-confirmation"
+  to = "/api/order-confirmation"
+  status = 200
+  force = true
+  conditions = {Role = ["OPTIONS"]}
+  headers = {Access-Control-Allow-Origin = "*", Access-Control-Allow-Methods = "POST, OPTIONS", Access-Control-Allow-Headers = "Content-Type"}
