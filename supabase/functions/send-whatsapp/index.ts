@@ -51,6 +51,8 @@ interface WhatsAppMessage {
   message: string
   type: 'template' | 'session'
   templateName?: string
+  contentSid?: string
+  contentVariables?: string
   orderId?: string
 }
 
@@ -138,8 +140,14 @@ serve(async (req) => {
     formData.append('To', `whatsapp:${normalizedPhone}`)
     formData.append('From', `whatsapp:${twilioWhatsAppNumber}`)
     
-    if (message.type === 'template' && message.templateName) {
-      // Template message
+    if (message.type === 'template' && message.contentSid) {
+      // Template message with new format
+      formData.append('ContentSid', message.contentSid)
+      if (message.contentVariables) {
+        formData.append('ContentVariables', message.contentVariables)
+      }
+    } else if (message.type === 'template' && message.templateName) {
+      // Legacy template message
       formData.append('ContentSid', message.templateName)
       formData.append('ContentVariables', JSON.stringify({
         "1": orderData?.customer_name || "Customer",

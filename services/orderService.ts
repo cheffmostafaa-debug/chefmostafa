@@ -113,8 +113,13 @@ export const submitOrder = async (orderData: OrderData): Promise<OrderResult> =>
         body: JSON.stringify({
           message: {
             to: normalizedPhone,
-            type: 'session',
-            message: `طلب ${dailyOrderNumber}\n${orderData.items.map(item => `${item.quantity}x ${item.item_name_ar}`).join('\n')}\nالإجمالي: ${orderData.total_amount} MRU`
+            type: 'template',
+            contentSid: 'HX123456789', // Replace with your actual template SID
+            contentVariables: JSON.stringify({
+              "1": dailyOrderNumber.toString(),
+              "2": orderData.items.map(item => `${item.quantity}x ${item.item_name_ar}`).join('\n'),
+              "3": `${orderData.total_amount} MRU`
+            })
           },
           orderId: order.id
         })
