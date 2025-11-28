@@ -4,6 +4,7 @@ import { normalizePhoneNumber } from './phoneUtils';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const restaurantOwnerPhone = import.meta.env.VITE_RESTAURANT_OWNER_PHONE;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
@@ -33,9 +34,6 @@ export interface OrderResult {
 
 export const submitOrder = async (orderData: OrderData): Promise<OrderResult> => {
   try {
-    // Normalize phone number before submission
-    const normalizedPhone = normalizePhoneNumber(orderData.customer_phone);
-    
     // Get today's order count for daily numbering
     const today = new Date().toISOString().split('T')[0];
     const { data: todayOrders, error: countError } = await supabase
@@ -53,7 +51,7 @@ export const submitOrder = async (orderData: OrderData): Promise<OrderResult> =>
       .from('orders')
       .insert({
         customer_name: orderData.customer_name,
-        customer_phone: normalizedPhone,
+        customer_phone: orderData.customer_phone,
         total_amount: orderData.total_amount,
         status: 'pending'
       })
@@ -102,7 +100,7 @@ export const submitOrder = async (orderData: OrderData): Promise<OrderResult> =>
       console.error('Order status update error:', updateError);
     }
 
-    // Send WhatsApp confirmation via Edge Function
+    // Send WhatsApp confirmation to restaurant owner via Edge Function
     try {
       const whatsappResponse = await fetch(`${supabaseUrl}/functions/v1/send-whatsapp`, {
         method: 'POST',
@@ -112,16 +110,20 @@ export const submitOrder = async (orderData: OrderData): Promise<OrderResult> =>
         },
         body: JSON.stringify({
           message: {
-            to: normalizedPhone,
-            message: `🍽️ *Commande #${dailyOrderNumber} confirmée!*
+            to: restaurantOwnerPhone,
+            message: `🔔 *NEW ORDER RECEIVED*
 
-📝 *Articles:*
+📋 *Order:* #${dailyOrderNumber}
+🪑 *Table:* ${orderData.customer_phone}
+👨‍🍳 *Waiter:* ${orderData.customer_name}
+
+📝 *Items:*
 ${orderData.items.map(item => `${item.quantity}x ${item.item_name_ar}`).join('\n')}
 
 💰 *Total:* ${orderData.total_amount} MRU
-⏰ *Heure:* ${new Date().toLocaleString('fr-FR')}
+⏰ *Time:* ${new Date().toLocaleString('fr-FR')}
 
-Merci pour votre commande! 🙏`,
+Please prepare this order! 🍽️`,
             type: 'session'
           },
           orderId: order.id

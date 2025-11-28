@@ -11,15 +11,21 @@ interface CartModalProps {
 export const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
   const { items, removeFromCart, total, clearCart } = useCart();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [waiterName, setWaiterName] = useState('');
+  const [tableNumber, setTableNumber] = useState('');
 
   const handleOrderSubmit = async () => {
     if (items.length === 0) return;
+    if (!waiterName.trim() || !tableNumber.trim()) {
+      alert('⚠️ Veuillez entrer le nom du serveur et le numéro de table');
+      return;
+    }
     
     setIsSubmitting(true);
     
     const orderPayload: OrderData = {
-      customer_name: "Client",
-      customer_phone: "+22227265400",
+      customer_name: waiterName,
+      customer_phone: tableNumber,
       items: items.map(item => ({
         menu_item_id: item.id,
         item_name_fr: item.nameFr,
@@ -34,7 +40,7 @@ export const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
       const result = await submitOrder(orderPayload);
       
       if (result.success) {
-        alert(`✅ Commande ${result.dailyOrderNumber} confirmée! Vous recevrez une confirmation WhatsApp.`);
+        alert(`✅ Commande ${result.dailyOrderNumber} envoyée! Le propriétaire recevra la commande sur WhatsApp.`);
         clearCart();
         onClose();
       } else {
@@ -107,6 +113,32 @@ export const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
 
         {/* Footer */}
         <div className="p-6 border-t border-gray-100 bg-white pb-safe">
+          {/* Staff Input Fields */}
+          <div className="space-y-3 mb-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nom du serveur</label>
+              <input
+                type="text"
+                value={waiterName}
+                onChange={(e) => setWaiterName(e.target.value)}
+                placeholder="Entrez votre nom"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
+                disabled={isSubmitting}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Numéro de table</label>
+              <input
+                type="text"
+                value={tableNumber}
+                onChange={(e) => setTableNumber(e.target.value)}
+                placeholder="Ex: T1, T2, Table 1"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
+                disabled={isSubmitting}
+              />
+            </div>
+          </div>
+
           <div className="flex justify-between items-center mb-6">
             <span className="text-gray-500 font-medium text-sm">Total à payer</span>
             <span className="text-3xl font-bold text-gray-900">{total} <span className="text-sm text-gray-400 font-medium">MRU</span></span>
