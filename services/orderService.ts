@@ -113,14 +113,16 @@ export const submitOrder = async (orderData: OrderData): Promise<OrderResult> =>
         body: JSON.stringify({
           message: {
             to: normalizedPhone,
-            message: `Order confirmation #${dailyOrderNumber}`,
-            type: 'template',
-            contentSid: 'HX123456789', // Replace with your actual template SID
-            contentVariables: {
-              "1": dailyOrderNumber.toString(),
-              "2": orderData.items.map(item => `${item.quantity}x ${item.item_name_ar}`).join('\n'),
-              "3": `${orderData.total_amount} MRU`
-            }
+            message: `🍽️ *Commande #${dailyOrderNumber} confirmée!*
+
+📝 *Articles:*
+${orderData.items.map(item => `${item.quantity}x ${item.item_name_ar}`).join('\n')}
+
+💰 *Total:* ${orderData.total_amount} MRU
+⏰ *Heure:* ${new Date().toLocaleString('fr-FR')}
+
+Merci pour votre commande! 🙏`,
+            type: 'session'
           },
           orderId: order.id
         })
