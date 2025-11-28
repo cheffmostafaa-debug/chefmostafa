@@ -123,6 +123,13 @@ serve(async (req) => {
     let messageContent = message.message;
     if (message.type === 'template' && message.contentSid) {
       messageContent = `Template: ${message.contentSid} - ${JSON.stringify(message.contentVariables || {})}`;
+    } else if (message.type === 'template' && message.templateName) {
+      messageContent = `Template: ${message.templateName}`;
+    }
+    
+    // Ensure message_content is never null
+    if (!messageContent || messageContent.trim() === '') {
+      messageContent = message.type === 'template' ? 'Template message' : 'Session message';
     }
 
     // Log message attempt
