@@ -23,7 +23,7 @@ function normalizePhoneNumber(phone: string): string {
     }
     
     if (/^[567]\d{7}$/.test(algerianNumber)) {
-      return `213${algerianNumber}`;
+      return `+213${algerianNumber}`;
     }
   }
   
@@ -39,7 +39,7 @@ function normalizePhoneNumber(phone: string): string {
     
     // Validate it's a valid Mauritanian mobile number (starts with 2, 3, or 4 and has 8 digits)
     if (/^[234]\d{7}$/.test(mauritanianNumber)) {
-      return `222${mauritanianNumber}`;
+      return `+222${mauritanianNumber}`;
     }
   }
   
@@ -52,7 +52,7 @@ interface WhatsAppMessage {
   type: 'template' | 'session'
   templateName?: string
   contentSid?: string
-  contentVariables?: string
+  contentVariables?: object
   orderId?: string
 }
 
@@ -113,8 +113,16 @@ serve(async (req) => {
     const authToken = Deno.env.get('TWILIO_AUTH_TOKEN')
     const twilioWhatsAppNumber = Deno.env.get('TWILIO_WHATSAPP_NUMBER')
 
+    console.log('Twilio Config:', { accountSid, authToken: authToken ? 'SET' : 'NOT SET', twilioWhatsAppNumber });
+
     if (!accountSid || !authToken || !twilioWhatsAppNumber) {
       throw new Error('Missing Twilio configuration')
+    }
+
+    // Generate message content for logging
+    let messageContent = message.message;
+    if (message.type === 'template' && message.contentSid) {
+      messageContent = `Template: ${message.contentSid} - ${JSON.stringify(message.contentVariables || {})}`;
     }
 
     // Log message attempt
@@ -124,8 +132,8 @@ serve(async (req) => {
         order_id: orderId || null,
         recipient_phone: normalizedPhone,
         message_type: message.type,
-        template_name: message.templateName || null,
-        message_content: message.message,
+        template_name: message.templateName || message.contentSid || null,
+        message_content: messageContent,
         status: 'pending'
       })
       .select()
@@ -144,7 +152,7 @@ serve(async (req) => {
       // Template message with new format
       formData.append('ContentSid', message.contentSid)
       if (message.contentVariables) {
-        formData.append('ContentVariables', message.contentVariables)
+        formData.append('ContentVariables', JSON.stringify(message.contentVariables))
       }
     } else if (message.type === 'template' && message.templateName) {
       // Legacy template message
@@ -158,6 +166,8 @@ serve(async (req) => {
       // Session message
       formData.append('Body', message.message)
     }
+
+    console.log('Twilio Request Body:', formData.toString());
 
     // Send to Twilio
     const authString = btoa(`${accountSid}:${authToken}`)
