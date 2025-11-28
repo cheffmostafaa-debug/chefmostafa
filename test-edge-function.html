@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Edge Function</title>
+</head>
+<body>
+    <h1>Test WhatsApp Edge Function</h1>
+    <button onclick="testFunction()">Test Edge Function</button>
+    <div id="result"></div>
+
+    <script>
+        async function testFunction() {
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                const response = await fetch('https://trucpvoesauuvuknmnen.supabase.co/functions/v1/send-whatsapp', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRydWNwdm9lc2F1dXZ1a25tbmVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxODE0ODksImV4cCI6MjA3OTc1NzQ4OX0.gKeYfCB-SYW03iNhydvfz3i8Lo546Au8oTv8mkYnctQ',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: {
+                            to: "+22227265400",
+                            message: "Test message",
+                            type: 'template',
+                            contentSid: 'HX123456789',
+                            contentVariables: {
+                                "1": "123",
+                                "2": "Test Item",
+                                "3": "100 MRU"
+                            }
+                        }
+                    })
+                });
+
+                const result = await response.json();
+                resultDiv.innerHTML = `
+                    <h3>Response Status: ${response.status}</h3>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                `;
+
+                if (!response.ok) {
+                    console.error('Error:', result);
+                }
+
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>Error:</h3>
+                    <pre>${error.message}</pre>
+                `;
+                console.error('Fetch Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
