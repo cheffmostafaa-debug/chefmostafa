@@ -114,7 +114,7 @@ export const submitOrder = async (orderData: OrderData): Promise<OrderResult> =>
           message: {
             to: normalizedPhone,
             type: 'session',
-            message: `Commande ${dailyOrderNumber}\n${orderData.items.map(item => `${item.quantity}x ${item.item_name_fr}`).join('\n')}\nTotal: ${orderData.total_amount} MRU`
+            message: `طلب ${dailyOrderNumber}\n${orderData.items.map(item => `${item.quantity}x ${item.item_name_ar}`).join('\n')}\nالإجمالي: ${orderData.total_amount} MRU`
           },
           orderId: order.id
         })
