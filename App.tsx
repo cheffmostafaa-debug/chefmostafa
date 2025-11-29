@@ -47,11 +47,11 @@ const MainContent: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-blue-50 to-white opacity-50"></div>
 
         <div className="z-10 flex flex-col items-center gap-8 animate-in zoom-in duration-700 max-w-md w-full">
-          <div className="mb-8">
+          <div className="mb-12 mt-8">
             <img 
               src="/logo.png" 
               alt="Chef Mustafa Logo" 
-              className="w-96 h-96 object-contain drop-shadow-lg"
+              className="w-64 h-64 object-contain drop-shadow-lg"
             />
           </div>
 
@@ -103,7 +103,7 @@ const MainContent: React.FC = () => {
               <button
                 key={category.id}
                 onClick={() => handleSelectCategory(category.id)}
-                className="relative aspect-[4/5] rounded-xl shadow-md hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-50 hover:border-blue-400 hover:scale-[1.05] active:scale-[0.98] group before:absolute before:inset-0 before:bg-gradient-to-br before:from-transparent before:via-white/10 before:to-white/20 before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500"
+                className="relative aspect-video rounded-lg shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 hover:border-blue-300 hover:scale-[1.02] active:scale-[0.98] group before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300"
               >
                 {/* Background Image */}
                 <div className="absolute inset-0">
