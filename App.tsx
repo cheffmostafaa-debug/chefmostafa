@@ -51,13 +51,12 @@ const MainContent: React.FC = () => {
             <img 
               src="/logo.png" 
               alt="Chef Mustafa Logo" 
-              className="w-48 h-48 object-contain drop-shadow-lg"
+              className="w-64 h-64 object-contain drop-shadow-lg"
             />
           </div>
 
           <div className="space-y-2">
-            <h1 className="text-5xl font-bold tracking-tight font-arabic text-blue-900">مطعم الشيف مصطفى</h1>
-            <h2 className="text-2xl font-light opacity-90 tracking-widest uppercase text-blue-800">Chef Mustafa Resto</h2>
+            <h1 className="text-4xl font-bold tracking-tight text-blue-900">Welcome</h1>
           </div>
 
           <div className="w-16 h-1 bg-blue-200 rounded-full"></div>
