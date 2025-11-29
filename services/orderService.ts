@@ -131,24 +131,7 @@ Please prepare this order! 🍽️`,
       });
 
       if (!whatsappResponse.ok) {
-        const errorData = await whatsappResponse.json();
-        console.error('WhatsApp notification failed:', errorData);
-        
-        // Handle different types of failures
-        if (errorData.fallback === 'sms') {
-          console.log('Order notification sent via SMS fallback');
-        } else if (errorData.error?.includes('outside WhatsApp window')) {
-          console.log('Order notification failed - outside messaging window');
-        } else {
-          console.error('Unexpected WhatsApp error:', errorData.error);
-        }
-      } else {
-        const successData = await whatsappResponse.json();
-        console.log('WhatsApp notification sent successfully:', successData);
-        
-        if (successData.fallback === 'sms') {
-          console.log('Order notification sent via SMS fallback due to WhatsApp restrictions');
-        }
+        console.error('WhatsApp notification failed:', await whatsappResponse.text());
       }
     } catch (whatsappError) {
       console.error('WhatsApp notification error:', whatsappError);

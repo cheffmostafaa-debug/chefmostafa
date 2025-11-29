@@ -70,106 +70,6 @@ interface OrderData {
   }>
 }
 
-// Check if we're within the 24-hour WhatsApp customer service window
-async function isWithinWhatsAppWindow(supabase: any, phoneNumber: string): Promise<boolean> {
-  try {
-    const { data: lastInboundMessage, error } = await supabase
-      .from('whatsapp_messages')
-      .select('created_at')
-      .eq('recipient_phone', phoneNumber)
-      .eq('message_direction', 'inbound')
-      .eq('status', 'delivered')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle() // Use maybeSingle() instead of single() to handle no rows
-
-    if (error) {
-      console.error('Error checking WhatsApp window:', error)
-      return false
-    }
-
-    if (!lastInboundMessage) {
-      console.log('No inbound messages found for phone:', phoneNumber)
-      return false
-    }
-
-    const lastMessageTime = new Date(lastInboundMessage.created_at)
-    const now = new Date()
-    const hoursDiff = (now.getTime() - lastMessageTime.getTime()) / (1000 * 60 * 60)
-    
-    console.log(`Last inbound message: ${lastMessageTime}, Hours since: ${hoursDiff}`)
-    
-    return hoursDiff <= 24
-  } catch (error) {
-    console.error('Error checking WhatsApp window:', error)
-    return false
-  }
-}
-
-// Send SMS fallback when outside WhatsApp window
-async function sendSMSFallback(supabase: any, phoneNumber: string, message: string): Promise<boolean> {
-  try {
-    // Twilio SMS API configuration
-    const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID')
-    const authToken = Deno.env.get('TWILIO_AUTH_TOKEN')
-    const twilioSMSNumber = Deno.env.get('TWILIO_SMS_NUMBER') || Deno.env.get('TWILIO_WHATSAPP_NUMBER')
-
-    if (!accountSid || !authToken || !twilioSMSNumber) {
-      console.error('Missing Twilio SMS configuration')
-      return false
-    }
-
-    console.log('Sending SMS fallback to:', phoneNumber)
-    
-    // Prepare Twilio SMS request
-    const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`
-    
-    const formData = new URLSearchParams()
-    formData.append('To', phoneNumber)
-    formData.append('From', twilioSMSNumber)
-    formData.append('Body', message)
-
-    // Send SMS via Twilio
-    const authString = btoa(`${accountSid}:${authToken}`)
-    
-    const smsResponse = await fetch(twilioUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Basic ${authString}`,
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: formData
-    })
-
-    const smsData = await smsResponse.json()
-
-    if (!smsResponse.ok) {
-      console.error('SMS API error:', smsData.message)
-      return false
-    }
-
-    console.log('SMS sent successfully, SID:', smsData.sid)
-    
-    // Log the successful SMS
-    await supabase
-      .from('whatsapp_messages')
-      .insert({
-        recipient_phone: phoneNumber,
-        message_type: 'session',
-        message_content: `[SMS] ${message}`,
-        message_direction: 'outbound',
-        status: 'sent',
-        twilio_message_sid: smsData.sid,
-        sent_at: new Date().toISOString()
-      })
-
-    return true
-  } catch (error) {
-    console.error('SMS fallback failed:', error)
-    return false
-  }
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -241,59 +141,12 @@ serve(async (req) => {
         message_type: message.type,
         template_name: message.templateName || message.contentSid || null,
         message_content: messageContent,
-        message_direction: 'outbound',
         status: 'pending'
       })
       .select()
       .single()
 
     if (logError) throw logError
-
-    // Check if we're within the 24-hour WhatsApp window for session messages
-    if (message.type === 'session') {
-      const isWithinWindow = await isWithinWhatsAppWindow(supabase, normalizedPhone)
-      
-      if (!isWithinWindow) {
-        console.log('Outside 24-hour WhatsApp window, attempting SMS fallback')
-        
-        // Update message log to show we tried WhatsApp but failed
-        await supabase
-          .from('whatsapp_messages')
-          .update({
-            status: 'failed',
-            twilio_error_code: '63016',
-            twilio_error_message: 'Outside 24-hour customer service window'
-          })
-          .eq('id', messageLog.id)
-
-        // Try SMS fallback
-        const smsSuccess = await sendSMSFallback(supabase, normalizedPhone, message.message)
-        
-        if (smsSuccess) {
-          return new Response(
-            JSON.stringify({ 
-              success: true, 
-              fallback: 'sms',
-              message: 'Message sent via SMS due to WhatsApp restrictions'
-            }),
-            { 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-              status: 200 
-            }
-          )
-        } else {
-          return new Response(
-            JSON.stringify({ 
-              error: 'Message failed - outside WhatsApp window and SMS fallback failed' 
-            }),
-            { 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-              status: 400 
-            }
-          )
-        }
-      }
-    }
 
     // Prepare Twilio request
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`

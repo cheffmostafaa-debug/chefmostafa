@@ -30,7 +30,6 @@ CREATE TABLE whatsapp_messages (
     message_type TEXT NOT NULL CHECK (message_type IN ('template', 'session')),
     template_name TEXT,
     message_content TEXT NOT NULL,
-    message_direction VARCHAR(10) DEFAULT 'outbound' CHECK (message_direction IN ('inbound', 'outbound')),
     status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'delivered', 'failed')),
     twilio_message_sid TEXT,
     twilio_error_code TEXT,
@@ -60,7 +59,6 @@ CREATE INDEX idx_orders_created_at ON orders(created_at);
 CREATE INDEX idx_order_items_order_id ON order_items(order_id);
 CREATE INDEX idx_whatsapp_messages_order_id ON whatsapp_messages(order_id);
 CREATE INDEX idx_whatsapp_messages_status ON whatsapp_messages(status);
-CREATE INDEX idx_whatsapp_messages_inbound ON whatsapp_messages(recipient_phone, created_at) WHERE message_direction = 'inbound';
 CREATE INDEX idx_message_queue_status ON message_queue(status);
 CREATE INDEX idx_message_queue_next_retry ON message_queue(next_retry_at);
 
