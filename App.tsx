@@ -48,9 +48,11 @@ const MainContent: React.FC = () => {
 
         <div className="z-10 flex flex-col items-center gap-8 animate-in zoom-in duration-700 max-w-md w-full">
           <div className="bg-white p-8 rounded-3xl shadow-2xl shadow-blue-900/10 mb-2 border-2 border-dashed border-blue-200">
-            <div className="w-28 h-28 flex items-center justify-center text-blue-200">
-              <span className="text-sm font-sans">LOGO</span>
-            </div>
+            <img 
+              src="/logo.png" 
+              alt="Chef Mustafa Logo" 
+              className="w-28 h-28 object-contain"
+            />
           </div>
 
           <div className="space-y-2">
