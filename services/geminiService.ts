@@ -10,7 +10,7 @@ const formatMenuForAI = () => {
 };
 
 export const askAIWaiter = async (userQuery: string): Promise<string> => {
-  const apiKey = process.env.API_KEY;
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
     return "I'm sorry, I cannot connect to the server right now (API Key missing).";
   }
