@@ -47,11 +47,11 @@ const MainContent: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-blue-50 to-white opacity-50"></div>
 
         <div className="z-10 flex flex-col items-center gap-8 animate-in zoom-in duration-700 max-w-md w-full">
-          <div className="bg-white p-8 rounded-3xl shadow-2xl shadow-blue-900/10 mb-2 border-2 border-dashed border-blue-200">
+          <div className="mb-4">
             <img 
               src="/logo.png" 
               alt="Chef Mustafa Logo" 
-              className="w-28 h-28 object-contain"
+              className="w-48 h-48 object-contain drop-shadow-lg"
             />
           </div>
 
