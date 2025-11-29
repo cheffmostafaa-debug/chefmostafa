@@ -51,7 +51,7 @@ const MainContent: React.FC = () => {
             <img 
               src="/logo.png" 
               alt="Chef Mustafa Logo" 
-              className="w-80 h-80 object-contain drop-shadow-lg"
+              className="w-96 h-96 object-contain drop-shadow-lg"
             />
           </div>
 
